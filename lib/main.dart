@@ -197,8 +197,14 @@ class _ScoreboardState extends State<Scoreboard> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double fontSize = screenWidth * 0.15;
+    double screenWidth = MediaQuery.of(context).size.width ;
+    double screenHeight = MediaQuery.of(context).size.height ;
+
+    // Get the minimum value between width and height
+    double smallerDimension = screenWidth < screenHeight ? screenWidth : screenHeight *.8;
+
+    // Calculate font size based on the smaller dimension
+    double fontSize = smallerDimension * 0.38;  // Ad
 
     return Scaffold(
       body: Stack(
@@ -210,7 +216,7 @@ class _ScoreboardState extends State<Scoreboard> {
             ],
           ),
           Align(
-            alignment: Alignment.center,
+            alignment: Alignment.bottomCenter,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
