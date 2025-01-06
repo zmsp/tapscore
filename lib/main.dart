@@ -31,8 +31,8 @@ class Scoreboard extends StatefulWidget {
 class _ScoreboardState extends State<Scoreboard> {
   int _teamAScore = 0;
   int _teamBScore = 0;
-Color _teamAColor = const Color.fromARGB(255, 0, 38, 94)!; // Very dark blue
-Color _teamBColor = const Color.fromARGB(255, 116, 0, 0)!;  // Very dark red
+  Color _teamAColor = const Color.fromARGB(255, 0, 38, 94)!; // Very dark blue
+  Color _teamBColor = const Color.fromARGB(255, 116, 0, 0)!; // Very dark red
 
   int _stopwatchTime = 0; // Stopwatch time in seconds
   late Timer _timer;
