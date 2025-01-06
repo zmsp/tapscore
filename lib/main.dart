@@ -1,3 +1,5 @@
+import 'dart:async'; // Import the required package for Timer
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -29,8 +31,29 @@ class Scoreboard extends StatefulWidget {
 class _ScoreboardState extends State<Scoreboard> {
   int _teamAScore = 0;
   int _teamBScore = 0;
-  Color _teamAColor = Colors.blue[800]!;
-  Color _teamBColor = Colors.red[800]!;
+Color _teamAColor = const Color.fromARGB(255, 0, 38, 94)!; // Very dark blue
+Color _teamBColor = const Color.fromARGB(255, 116, 0, 0)!;  // Very dark red
+
+  int _stopwatchTime = 0; // Stopwatch time in seconds
+  late Timer _timer;
+
+  // Start the stopwatch
+  void _startStopwatch() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _stopwatchTime++;
+      });
+    });
+  }
+
+  // Reset the stopwatch
+  void _resetStopwatch() {
+    setState(() {
+      _stopwatchTime = 0;
+    });
+    _timer.cancel(); // Stop the timer
+    _startStopwatch(); // Restart the stopwatch
+  }
 
   void _incrementScore(String team) {
     setState(() {
@@ -72,6 +95,7 @@ class _ScoreboardState extends State<Scoreboard> {
                   _teamBScore = 0;
                 });
                 Navigator.of(context).pop();
+                _resetStopwatch(); // Reset stopwatch when scores are reset
               },
               child: const Text("Reset"),
             ),
@@ -94,6 +118,18 @@ class _ScoreboardState extends State<Scoreboard> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _startStopwatch(); // Start stopwatch when the app starts
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Make sure to cancel the timer when the app is disposed
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Get the screen dimensions
     double screenWidth = MediaQuery.of(context).size.width;
@@ -102,6 +138,10 @@ class _ScoreboardState extends State<Scoreboard> {
     // Calculate font size dynamically based on the screen width (you can adjust this formula)
     double fontSize =
         screenWidth * 0.2; // Font size will scale with screen width
+
+    // Format stopwatch time
+    String formattedTime =
+        '${(_stopwatchTime ~/ 60).toString().padLeft(2, '0')}:${(_stopwatchTime % 60).toString().padLeft(2, '0')}';
 
     return Scaffold(
       body: Stack(
@@ -127,6 +167,12 @@ class _ScoreboardState extends State<Scoreboard> {
                           style: TextStyle(
                               fontSize: fontSize, color: Colors.white),
                         ),
+                        // Decrement button below Team A score
+                        IconButton(
+                          onPressed: () => _decrementScore('A'),
+                          icon: const Icon(Icons.remove_circle,
+                              size: 40, color: Colors.white),
+                        ),
                       ],
                     ),
                   ),
@@ -151,6 +197,12 @@ class _ScoreboardState extends State<Scoreboard> {
                           style: TextStyle(
                               fontSize: fontSize, color: Colors.white),
                         ),
+                        // Decrement button below Team B score
+                        IconButton(
+                          onPressed: () => _decrementScore('B'),
+                          icon: const Icon(Icons.remove_circle,
+                              size: 40, color: Colors.white),
+                        ),
                       ],
                     ),
                   ),
@@ -166,22 +218,11 @@ class _ScoreboardState extends State<Scoreboard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 10),
-                // Team A minus button
-                FloatingActionButton(
-                  onPressed: () => _decrementScore('A'),
-                  backgroundColor: _teamAColor,
-                  shape: const CircleBorder(), // Ensures the button is round
-                  child: const Icon(Icons.remove, color: Colors.white),
+                // Stopwatch Display
+                Text(
+                  formattedTime,
+                  style: TextStyle(fontSize: 40, color: Colors.white),
                 ),
-                const SizedBox(height: 10),
-                // Team B minus button
-                FloatingActionButton(
-                  onPressed: () => _decrementScore('B'),
-                  backgroundColor: _teamBColor,
-                  shape: const CircleBorder(), // Ensures the button is round
-                  child: const Icon(Icons.remove, color: Colors.white),
-                ),
-
                 const SizedBox(height: 10),
                 // Reset button
                 FloatingActionButton(
@@ -197,22 +238,6 @@ class _ScoreboardState extends State<Scoreboard> {
                   backgroundColor: Colors.orange,
                   shape: const CircleBorder(), // Ensures the button is round
                   child: const Icon(Icons.swap_horiz, color: Colors.white),
-                ),
-                const SizedBox(height: 10),
-                // Team A plus button
-                FloatingActionButton(
-                  onPressed: () => _incrementScore('A'),
-                  backgroundColor: _teamAColor,
-                  shape: const CircleBorder(), // Ensures the button is round
-                  child: const Icon(Icons.add, color: Colors.white),
-                ),
-                const SizedBox(height: 10),
-                // Team B plus button
-                FloatingActionButton(
-                  onPressed: () => _incrementScore('B'),
-                  backgroundColor: _teamBColor,
-                  shape: const CircleBorder(), // Ensures the button is round
-                  child: const Icon(Icons.add, color: Colors.white),
                 ),
               ],
             ),
