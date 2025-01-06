@@ -1,7 +1,13 @@
-import 'dart:async'; // Import the required package for Timer
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 
+import 'package:flutter/foundation.dart'; // For kIsWeb
+
+// Conditional import for web-specific functionality
+import 'platform_specific.dart' if (dart.library.html) 'web_specific.dart';
+
+
+// For JS interop functionality (web only)
 void main() {
   runApp(const MyApp());
 }
@@ -13,9 +19,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Virtual Scoreboard',
-      theme: ThemeData(
-        useMaterial3: true,
-      ),
+      theme: ThemeData(useMaterial3: true),
       home: const Scoreboard(),
     );
   }
@@ -31,13 +35,24 @@ class Scoreboard extends StatefulWidget {
 class _ScoreboardState extends State<Scoreboard> {
   int _teamAScore = 0;
   int _teamBScore = 0;
-  Color _teamAColor = const Color.fromARGB(255, 0, 38, 94)!; // Very dark blue
-  Color _teamBColor = const Color.fromARGB(255, 116, 0, 0)!; // Very dark red
-
-  int _stopwatchTime = 0; // Stopwatch time in seconds
+  int _stopwatchTime = 0;
   late Timer _timer;
 
-  // Start the stopwatch
+  Color _teamAColor = const Color(0xFF00265E); // Dark blue
+  Color _teamBColor = const Color(0xFF740000); // Dark red
+
+  @override
+  void initState() {
+    super.initState();
+    _startStopwatch();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
   void _startStopwatch() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
@@ -46,32 +61,28 @@ class _ScoreboardState extends State<Scoreboard> {
     });
   }
 
-  // Reset the stopwatch
   void _resetStopwatch() {
     setState(() {
       _stopwatchTime = 0;
     });
-    _timer.cancel(); // Stop the timer
-    _startStopwatch(); // Restart the stopwatch
+    _timer.cancel();
+    _startStopwatch();
   }
 
   void _incrementScore(String team) {
     setState(() {
-      if (team == 'A') {
+      if (team == 'A')
         _teamAScore++;
-      } else {
+      else
         _teamBScore++;
-      }
     });
   }
 
   void _decrementScore(String team) {
     setState(() {
-      if (team == 'A' && _teamAScore > 0) {
+      if (team == 'A' && _teamAScore > 0)
         _teamAScore--;
-      } else if (team == 'B' && _teamBScore > 0) {
-        _teamBScore--;
-      }
+      else if (team == 'B' && _teamBScore > 0) _teamBScore--;
     });
   }
 
@@ -95,7 +106,7 @@ class _ScoreboardState extends State<Scoreboard> {
                   _teamBScore = 0;
                 });
                 Navigator.of(context).pop();
-                _resetStopwatch(); // Reset stopwatch when scores are reset
+                _resetStopwatch();
               },
               child: const Text("Reset"),
             ),
@@ -107,139 +118,124 @@ class _ScoreboardState extends State<Scoreboard> {
 
   void _swapScores() {
     setState(() {
-      int tempScore = _teamAScore;
+      final tempScore = _teamAScore;
       _teamAScore = _teamBScore;
       _teamBScore = tempScore;
 
-      Color tempColor = _teamAColor;
+      final tempColor = _teamAColor;
       _teamAColor = _teamBColor;
       _teamBColor = tempColor;
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _startStopwatch(); // Start stopwatch when the app starts
+  String get formattedTime {
+    return '${(_stopwatchTime ~/ 60).toString().padLeft(2, '0')}:${(_stopwatchTime % 60).toString().padLeft(2, '0')}';
   }
 
-  @override
-  void dispose() {
-    _timer.cancel(); // Make sure to cancel the timer when the app is disposed
-    super.dispose();
+  Widget _buildTeamSection(
+      Color color, String team, int score, double fontSize) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _incrementScore(team),
+        child: Container(
+          color: color,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () => _incrementScore(team),
+                icon: const Icon(Icons.add, size: 40, color: Colors.white),
+              ),
+              Text(
+                '$score',
+                style: TextStyle(fontSize: fontSize, color: Colors.white),
+              ),
+              IconButton(
+                onPressed: () => _decrementScore(team),
+                icon: const Icon(Icons.remove_circle_outline,
+                    size: 40, color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(
+      VoidCallback onPressed, IconData icon, Color backgroundColor) {
+    return FloatingActionButton(
+      onPressed: onPressed,
+      backgroundColor: backgroundColor,
+      shape: const CircleBorder(),
+      child: Icon(icon, color: Colors.white),
+    );
+  }
+
+  void _showHelp() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Help"),
+          content: const Text(
+            "Tap on the red or blue sections to increase the score for Red or Blue Team. "
+            "Use the + and - buttons to adjust scores. "
+            "Use the reset button to reset scores and stopwatch. "
+            "Use the swap button to swap scores and colors.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen dimensions
     double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-
-    // Calculate font size dynamically based on the screen width (you can adjust this formula)
-    double fontSize =
-        screenWidth * 0.2; // Font size will scale with screen width
-
-    // Format stopwatch time
-    String formattedTime =
-        '${(_stopwatchTime ~/ 60).toString().padLeft(2, '0')}:${(_stopwatchTime % 60).toString().padLeft(2, '0')}';
+    double fontSize = screenWidth * 0.15;
 
     return Scaffold(
       body: Stack(
         children: [
-          // Blue and Red Sections
           Row(
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _incrementScore('A'),
-                  child: Container(
-                    color: _teamAColor,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          onPressed: () => _incrementScore('A'),
-                          icon: const Icon(Icons.add_circle,
-                              size: 40, color: Colors.white),
-                        ),
-                        Text(
-                          '$_teamAScore',
-                          style: TextStyle(
-                              fontSize: fontSize, color: Colors.white),
-                        ),
-                        // Decrement button below Team A score
-                        IconButton(
-                          onPressed: () => _decrementScore('A'),
-                          icon: const Icon(Icons.remove_circle,
-                              size: 40, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                flex: 1,
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _incrementScore('B'),
-                  child: Container(
-                    color: _teamBColor,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          onPressed: () => _incrementScore('B'),
-                          icon: const Icon(Icons.add_circle,
-                              size: 40, color: Colors.white),
-                        ),
-                        Text(
-                          '$_teamBScore',
-                          style: TextStyle(
-                              fontSize: fontSize, color: Colors.white),
-                        ),
-                        // Decrement button below Team B score
-                        IconButton(
-                          onPressed: () => _decrementScore('B'),
-                          icon: const Icon(Icons.remove_circle,
-                              size: 40, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                flex: 1,
-              ),
+              _buildTeamSection(_teamAColor, 'A', _teamAScore, fontSize),
+              _buildTeamSection(_teamBColor, 'B', _teamBScore, fontSize),
             ],
           ),
-          // Center Buttons
           Align(
             alignment: Alignment.center,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 10),
-                // Stopwatch Display
-                Text(
-                  formattedTime,
-                  style: TextStyle(fontSize: 40, color: Colors.white),
-                ),
+                Text(formattedTime,
+                    style: TextStyle(fontSize: 40, color: Colors.white)),
                 const SizedBox(height: 10),
-                // Reset button
-                FloatingActionButton(
-                  onPressed: _resetScores,
-                  backgroundColor: Colors.grey[700],
-                  shape: const CircleBorder(), // Ensures the button is round
-                  child: const Icon(Icons.refresh, color: Colors.white),
-                ),
+                _buildActionButton(_resetScores, Icons.refresh, Colors.black26),
                 const SizedBox(height: 10),
-                // Swap button
-                FloatingActionButton(
-                  onPressed: _swapScores,
-                  backgroundColor: Colors.orange,
-                  shape: const CircleBorder(), // Ensures the button is round
-                  child: const Icon(Icons.swap_horiz, color: Colors.white),
-                ),
+                _buildActionButton(
+                    _swapScores, Icons.swap_horiz, Colors.black26),
+                const SizedBox(height: 10),
+                _buildActionButton(
+                    _showHelp, Icons.question_mark, Colors.black26),
               ],
+            ),
+          ),
+          // Fullscreen button in the bottom right corner
+          Positioned(
+            bottom: 20,
+            right: 20,
+            child: FloatingActionButton(
+    onPressed: toggleFullscreenMode,
+              backgroundColor: Colors.black54,
+              child: const Icon(Icons.fullscreen, color: Colors.white),
             ),
           ),
         ],
