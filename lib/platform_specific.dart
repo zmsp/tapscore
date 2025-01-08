@@ -16,7 +16,7 @@ bool toggleFullscreenMode(bool isFullscreen) {
 }
 
 // Function to prevent sleep (on mobile platforms)
-void preventSleep() {
+void preventSleep(BuildContext context) {
   // Prevent screen from going to sleep (on mobile platforms)
   WidgetsBinding.instance!.addObserver(LifecycleEventHandler());
 }

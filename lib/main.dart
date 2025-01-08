@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-
+import 'platform_specific.dart' if (dart.library.html) 'web_specific.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tap_score/settings_page.dart'; // For kIsWeb
 
@@ -42,7 +42,9 @@ class _ScoreboardState extends State<Scoreboard> {
   void initState() {
     super.initState();
     _audioPlayer = AudioPlayer();
+    // preventSleep(context);
     _startStopwatch();
+    toggleFullscreenMode(true);
   }
 
   @override
@@ -216,10 +218,10 @@ class _ScoreboardState extends State<Scoreboard> {
 
     // Get the minimum value between width and height
     double smallerDimension =
-        screenWidth < screenHeight ? screenWidth : screenHeight * 1.0;
+        screenWidth < screenHeight ? screenWidth : screenHeight;
 
     // Calculate font size based on the smaller dimension
-    double fontSize = smallerDimension * 0.4; // Ad
+    double fontSize = smallerDimension * 0.36; // Ad
 
     return Scaffold(
       body: Stack(

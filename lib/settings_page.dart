@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-// Conditional import for web-specific functionality
+import 'package:shared_preferences/shared_preferences.dart';
 import 'platform_specific.dart' if (dart.library.html) 'web_specific.dart';
-
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
 
@@ -11,15 +10,48 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   bool _isFullscreen = false;
+  bool _preventSleep = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings(); // Load settings when the page is first built
+  }
+
+  // Load the settings from SharedPreferences
+  void _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isFullscreen = prefs.getBool('isFullscreen') ?? false;
+      _preventSleep = prefs.getBool('preventSleep') ?? false;
+    });
+  }
+
+  // Save the settings to SharedPreferences
+  void _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('isFullscreen', _isFullscreen);
+    prefs.setBool('preventSleep', _preventSleep);
+  }
 
   void _toggleFullscreen() {
-    setState(() {
-      // Only toggle if the fullscreen state actually changes based on the result of the function
+        setState(() {
       if (toggleFullscreenMode(_isFullscreen)) {
-        _isFullscreen =
-            !_isFullscreen; // Toggle the fullscreen state if the function returned true
+     
+      _saveSettings(); 
       }
+        _isFullscreen = !_isFullscreen;
     });
+  
+  }
+
+  // This function can trigger the necessary functionality to prevent sleep
+  void _togglePreventSleep(bool value) {
+    setState(() {
+      _preventSleep = value;
+      _saveSettings(); // Save the updated setting
+    });
+    preventSleep(context);
   }
 
   void _showHelp() {
@@ -56,6 +88,11 @@ class _SettingsPageState extends State<SettingsPage> {
             title: const Text("Fullscreen Mode"),
             value: _isFullscreen,
             onChanged: (value) => _toggleFullscreen(),
+          ),
+          SwitchListTile(
+            title: const Text("Prevent Screen Sleep"),
+            value: _preventSleep,
+            onChanged: (value) => _togglePreventSleep(value),
           ),
           ListTile(
             title: const Text("Help"),
