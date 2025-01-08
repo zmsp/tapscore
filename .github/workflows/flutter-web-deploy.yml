@@ -22,8 +22,8 @@ jobs:
       with:
         path: |
           ~/.pub-cache
-          ./flutter-app/build  # Cache the build directory inside flutter-app
-        key: ${{ runner.os }}-flutter-${{ hashFiles('flutter-app/**/pubspec.yaml') }}
+          ./build  # Cache the build directory in the root of the project
+        key: ${{ runner.os }}-flutter-${{ hashFiles('pubspec.yaml') }}  # Adjust the path to pubspec.yaml
         restore-keys: |
           ${{ runner.os }}-flutter-
 
@@ -32,21 +32,17 @@ jobs:
       uses: subosito/flutter-action@v2
       with:
         channel: stable
-        flutter-version-file: ./flutter-app/pubspec.yaml # path to pubspec.yaml
+        flutter-version: 3.27.1
+    - run: flutter --version
 
     # Install dependencies
     - name: Install dependencies
-      run: |
-        cd flutter-app  # Navigate to the flutter-app directory
-        flutter pub get
-
+      run: flutter pub get  # No need to cd into flutter-app since the files are now at the root
 
     # Build Flutter Web app (or Android, iOS, etc.)
     - name: Build Flutter Web
       run: |
-        cd flutter-app  # Navigate to the flutter-app directory
-        flutter build web --release
-        # For Android, use flutter build apk --release (and for iOS, flutter build ios --release)
+        flutter build web --release  # Build the web app directly from the root
 
     # Deploy to GitHub Pages (for Flutter Web)
     - name: Deploy to GitHub Pages
@@ -54,7 +50,7 @@ jobs:
       uses: JamesIves/github-pages-deploy-action@v4.7.2
       with:
         branch: gh-pages  # The GitHub Pages branch
-        folder: flutter-app/build/web  # Folder containing the Flutter Web build output
+        folder: build/web  # Adjust the path to the web build output
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
