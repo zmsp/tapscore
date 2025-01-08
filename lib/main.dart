@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+import 'package:flutter/foundation.dart';
+import 'package:tap_score/settings_page.dart'; // For kIsWeb
 
-// Conditional import for web-specific functionality
-import 'platform_specific.dart' if (dart.library.html) 'web_specific.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 // For JS interop functionality (web only)
 void main() {
@@ -31,38 +32,42 @@ class Scoreboard extends StatefulWidget {
 }
 
 class _ScoreboardState extends State<Scoreboard> {
-  int _teamAScore = 0;
-  int _teamBScore = 0;
-  int _stopwatchTime = 0;
+  late final AudioPlayer _audioPlayer;
+  int _teamAScore = 0, _teamBScore = 0, _stopwatchTime = 0;
   late Timer _timer;
-
-  Color _teamAColor = const Color(0xFF00265E); // Dark blue
-  Color _teamBColor = const Color(0xFF740000); // Dark red
+  Color _teamAColor = const Color(0xFF00265E),
+      _teamBColor = const Color(0xFF740000);
 
   @override
   void initState() {
     super.initState();
+    _audioPlayer = AudioPlayer();
     _startStopwatch();
   }
 
   @override
   void dispose() {
     _timer.cancel();
+    _audioPlayer.dispose();
     super.dispose();
+  }
+
+  void _playHornSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('whistle.mp3'));
+    } catch (e) {
+      print("Error playing sound: $e");
+    }
   }
 
   void _startStopwatch() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _stopwatchTime++;
-      });
+      setState(() => _stopwatchTime++);
     });
   }
 
   void _resetStopwatch() {
-    setState(() {
-      _stopwatchTime = 0;
-    });
+    setState(() => _stopwatchTime = 0);
     _timer.cancel();
     _startStopwatch();
   }
@@ -156,36 +161,51 @@ class _ScoreboardState extends State<Scoreboard> {
     );
   }
 
-  Widget _buildActionButton(
-      VoidCallback onPressed, IconData icon, Color backgroundColor) {
-    return FloatingActionButton(
-      onPressed: onPressed,
-      backgroundColor: backgroundColor,
-      shape: const CircleBorder(),
-      child: Icon(icon, color: Colors.white),
-    );
-  }
+// Widget _buildActionButton(
+//     {required VoidCallback onPressed,
+//     required IconData icon,
+//     required Color backgroundColor,
+//     required String heroTag}) {
+//   return FloatingActionButton(
+//     heroTag: heroTag, // Use the passed heroTag
+//     onPressed: onPressed,
+//     backgroundColor: backgroundColor,
+//     shape: const CircleBorder(),
+//     child: Icon(icon, color: Colors.white),
+//   );
+// }
 
-  void _showHelp() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Help"),
-          content: const Text(
-            "Tap on the red or blue sections to increase the score for Red or Blue Team. "
-            "Use the + and - buttons to adjust scores. "
-            "Use the reset button to reset scores and stopwatch. "
-            "Use the swap button to swap scores and colors.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Close"),
+  Widget _buildActionButton({
+    required VoidCallback onPressed,
+    required IconData icon,
+    required Color backgroundColor,
+    required String heroTag,
+    String? tooltip,
+    double? top,
+    double? left,
+    double? bottom,
+    double? right,
+  }) {
+    // Wrap Positioned widget inside a Stack if not already inside one
+    return Stack(
+      children: [
+        Positioned(
+          top: top,
+          left: left,
+          bottom: bottom,
+          right: right,
+          child: Tooltip(
+            message: tooltip ?? 'No info available',
+            child: FloatingActionButton(
+              heroTag: heroTag,
+              onPressed: onPressed,
+              backgroundColor: backgroundColor,
+              shape: const CircleBorder(),
+              child: Icon(icon, color: Colors.white),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
@@ -224,54 +244,71 @@ class _ScoreboardState extends State<Scoreboard> {
                 // _buildActionButton(
                 //     _showHelp, Icons.question_mark, Colors.black26),
                 //              const SizedBox(height: 10),
+
                 const SizedBox(height: 10),
-                _buildActionButton(_resetScores, Icons.refresh, Colors.black26),
+
                 const SizedBox(height: 10),
                 _buildActionButton(
-                    _swapScores, Icons.swap_horiz, Colors.black26),
+                  onPressed: _resetScores,
+                  icon: Icons.refresh,
+                  backgroundColor: Colors.black26,
+                  tooltip: 'Reset the scores',
+                  heroTag:
+                      'resetScoresButton', // Unique heroTag for the reset button
+                ),
+                const SizedBox(height: 10),
+                _buildActionButton(
+                  onPressed: _swapScores,
+                  icon: Icons.swap_horiz,
+                  backgroundColor: Colors.black26,
+                  tooltip: 'Swap scores and colors',
+                  heroTag:
+                      'swapScoresButton', // Unique heroTag for the swap button
+                ),
                 const SizedBox(height: 10),
               ],
             ),
           ),
-          // Fullscreen button in the bottom right corner
-          Positioned(
-            top: 20, // Adjust as needed
-            left: 20, // Position it within Team A's section
-            child: FloatingActionButton(
-              onPressed: () => _showHelp(),
-              backgroundColor: Colors.black12,
-              child: const Icon(Icons.campaign, color: Colors.white),
-            ),
+          _buildActionButton(
+            onPressed: _playHornSound,
+            icon: Icons.volume_up,
+            backgroundColor: Colors.black12,
+            heroTag: 'hornButton',
+            tooltip: 'Play Horn Sound',
+            top: 20,
+            left: 20,
           ),
-
-          //   Positioned(
-          //   top: 20, // Adjust as needed
-          //   right: 20, // Position it within Team A's section
-          //   child: FloatingActionButton(
-          //     onPressed: () => _decrementScore('A'),
-          //     backgroundColor: Colors.black12,
-          //     child: const Icon(Icons.exposure_neg_1, color: Colors.white),
-          //   ),
-          // ),
-          // Minus button for Team A positioned at the bottom of the team section
-          Positioned(
-            bottom: 20, // Adjust as needed
-            left: 20, // Position it within Team A's section
-            child: FloatingActionButton(
-              onPressed: () => _decrementScore('A'),
-              backgroundColor: Colors.black12,
-              child: const Icon(Icons.exposure_neg_1, color: Colors.white),
-            ),
+          _buildActionButton(
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SettingsPage()));
+            },
+            icon: Icons.settings,
+            backgroundColor: Colors.black12,
+            heroTag: 'settingsButton',
+            tooltip: 'Settings',
+            top: 20,
+            right: 20,
           ),
-          // Minus button for Team B positioned at the bottom of the team section
-          Positioned(
-            bottom: 20, // Adjust as needed
-            right: 20, // Position it within Team B's section
-            child: FloatingActionButton(
-              onPressed: () => _decrementScore('B'),
-              backgroundColor: Colors.black12,
-              child: const Icon(Icons.exposure_neg_1, color: Colors.white),
-            ),
+          _buildActionButton(
+            onPressed: () => _decrementScore('A'),
+            icon: Icons.exposure_neg_1,
+            backgroundColor: Colors.black12,
+            heroTag: 'decrementTeamAButton',
+            tooltip: 'Decrement Team A Score',
+            bottom: 20,
+            left: 20,
+          ),
+          _buildActionButton(
+            onPressed: () => _decrementScore('B'),
+            icon: Icons.exposure_neg_1,
+            backgroundColor: Colors.black12,
+            heroTag: 'decrementTeamBButton',
+            tooltip: 'Decrement Team B Score',
+            bottom: 20,
+            right: 20,
           ),
         ],
       ),
