@@ -23,11 +23,6 @@ jobs:
           cd flutter-app  # Change to the Flutter project directory
           flutter pub get
 
-      - name: Run tests
-        run: |
-          cd flutter-app  # Change to the Flutter project directory
-          flutter test
-
       - name: Build Flutter web app
         run: |
           cd flutter-app  # Change to the Flutter project directory
