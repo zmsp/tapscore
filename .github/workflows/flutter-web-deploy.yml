@@ -1,47 +1,60 @@
-name: Build and Deploy Flutter Web to GitHub Pages
+name: Flutter CI
 
 on:
   push:
     branches:
-      - main  # Trigger on pushes to the main branch
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  flutter-build:
+    runs-on: ubuntu-latest  # Ubuntu-based runner for Flutter
 
     steps:
-      - name: Clone repository
-        uses: actions/checkout@v4
-      - name: Cache Flutter dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pub-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
+    - name: Checkout Repository
+      uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          cd flutter-app  # Change to the Flutter project directory
-          flutter pub get
+    # Cache Flutter dependencies to avoid re-downloading them
+    - name: Cache Flutter dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.pub-cache
+          ./flutter-app/build  # Cache the build directory inside flutter-app
+        key: ${{ runner.os }}-flutter-${{ hashFiles('flutter-app/**/pubspec.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-flutter-
 
-      - name: Build Flutter web app
-        run: |
-          cd flutter-app  # Change to the Flutter project directory
-          flutter build web
+    # Set up Flutter SDK
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 'stable'  # Specify the Flutter version you need
 
-  
-  
-        # Deploy to GitHub Pages
-      - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4.7.2
-        with:
-          branch: gh-pages  # The GitHub Pages branch
-          folder: flutter-app/build/web  # The folder containing the Flutter web build
-          clean: true  # Clean the gh-pages branch before deploying
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        cd flutter-app  # Navigate to the flutter-app directory
+        flutter pub get
+
+
+    # Build Flutter Web app (or Android, iOS, etc.)
+    - name: Build Flutter Web
+      run: |
+        cd flutter-app  # Navigate to the flutter-app directory
+        flutter build web --release
+        # For Android, use flutter build apk --release (and for iOS, flutter build ios --release)
+
+    # Deploy to GitHub Pages (for Flutter Web)
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main'
+      uses: JamesIves/github-pages-deploy-action@v4.7.2
+      with:
+        branch: gh-pages  # The GitHub Pages branch
+        folder: flutter-app/build/web  # Folder containing the Flutter Web build output
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Optionally, you can add additional build steps for Android, iOS, or other platforms
