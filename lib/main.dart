@@ -147,12 +147,12 @@ class _ScoreboardState extends State<Scoreboard> {
             children: [
               Text(
                 '$score',
-                style: TextStyle(fontSize: fontSize, color: Colors.white),
+                style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               // This will push the minus button to the bottom
               IconButton(
                 onPressed: () => _incrementScore(team),
-                icon: const Icon(Icons.add, size: 40, color: Colors.white),
+                icon: const Icon(Icons.add, size: 40, color: Colors.white38),
               ),
             ],
           ),
@@ -216,10 +216,10 @@ class _ScoreboardState extends State<Scoreboard> {
 
     // Get the minimum value between width and height
     double smallerDimension =
-        screenWidth < screenHeight ? screenWidth : screenHeight * 1.2;
+        screenWidth < screenHeight ? screenWidth : screenHeight * 1.0;
 
     // Calculate font size based on the smaller dimension
-    double fontSize = smallerDimension * 0.38; // Ad
+    double fontSize = smallerDimension * 0.4; // Ad
 
     return Scaffold(
       body: Stack(
@@ -271,7 +271,7 @@ class _ScoreboardState extends State<Scoreboard> {
           ),
           _buildActionButton(
             onPressed: _playHornSound,
-            icon: Icons.volume_up,
+            icon: Icons.campaign,
             backgroundColor: Colors.black12,
             heroTag: 'hornButton',
             tooltip: 'Play Horn Sound',

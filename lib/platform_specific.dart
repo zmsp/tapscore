@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart'; // For SystemChrome and WidgetsBinding
 
 // Function to toggle fullscreen mode
 bool toggleFullscreenMode(bool isFullscreen) {
-  if (isFullscreen) {
+  if (!isFullscreen) {
     // Enable immersive sticky fullscreen mode for iOS/Android
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     return true; // Successfully toggled to fullscreen
