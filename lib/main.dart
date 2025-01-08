@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'package:flutter/foundation.dart'; // For kIsWeb
 
 // Conditional import for web-specific functionality
 import 'platform_specific.dart' if (dart.library.html) 'web_specific.dart';
-
 
 // For JS interop functionality (web only)
 void main() {
@@ -142,18 +140,14 @@ class _ScoreboardState extends State<Scoreboard> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
-                onPressed: () => _incrementScore(team),
-                icon: const Icon(Icons.add, size: 40, color: Colors.white),
-              ),
               Text(
                 '$score',
                 style: TextStyle(fontSize: fontSize, color: Colors.white),
               ),
+              // This will push the minus button to the bottom
               IconButton(
-                onPressed: () => _decrementScore(team),
-                icon: const Icon(Icons.remove_circle_outline,
-                    size: 40, color: Colors.white),
+                onPressed: () => _incrementScore(team),
+                icon: const Icon(Icons.add, size: 40, color: Colors.white),
               ),
             ],
           ),
@@ -197,14 +191,15 @@ class _ScoreboardState extends State<Scoreboard> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width ;
-    double screenHeight = MediaQuery.of(context).size.height ;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     // Get the minimum value between width and height
-    double smallerDimension = screenWidth < screenHeight ? screenWidth : screenHeight *.8;
+    double smallerDimension =
+        screenWidth < screenHeight ? screenWidth : screenHeight * 1.2;
 
     // Calculate font size based on the smaller dimension
-    double fontSize = smallerDimension * 0.38;  // Ad
+    double fontSize = smallerDimension * 0.38; // Ad
 
     return Scaffold(
       body: Stack(
@@ -223,25 +218,59 @@ class _ScoreboardState extends State<Scoreboard> {
                 const SizedBox(height: 10),
                 Text(formattedTime,
                     style: TextStyle(fontSize: 40, color: Colors.white)),
+                // _buildActionButton(
+                //     toggleFullscreenMode, Icons.fullscreen, Colors.black12),
+                // const SizedBox(height: 10),
+                // _buildActionButton(
+                //     _showHelp, Icons.question_mark, Colors.black26),
+                //              const SizedBox(height: 10),
                 const SizedBox(height: 10),
                 _buildActionButton(_resetScores, Icons.refresh, Colors.black26),
                 const SizedBox(height: 10),
                 _buildActionButton(
                     _swapScores, Icons.swap_horiz, Colors.black26),
                 const SizedBox(height: 10),
-                _buildActionButton(
-                    _showHelp, Icons.question_mark, Colors.black26),
               ],
             ),
           ),
           // Fullscreen button in the bottom right corner
           Positioned(
-            bottom: 20,
-            right: 20,
+            top: 20, // Adjust as needed
+            left: 20, // Position it within Team A's section
             child: FloatingActionButton(
-    onPressed: toggleFullscreenMode,
-              backgroundColor: Colors.black54,
-              child: const Icon(Icons.fullscreen, color: Colors.white),
+              onPressed: () => _showHelp(),
+              backgroundColor: Colors.black12,
+              child: const Icon(Icons.campaign, color: Colors.white),
+            ),
+          ),
+
+          //   Positioned(
+          //   top: 20, // Adjust as needed
+          //   right: 20, // Position it within Team A's section
+          //   child: FloatingActionButton(
+          //     onPressed: () => _decrementScore('A'),
+          //     backgroundColor: Colors.black12,
+          //     child: const Icon(Icons.exposure_neg_1, color: Colors.white),
+          //   ),
+          // ),
+          // Minus button for Team A positioned at the bottom of the team section
+          Positioned(
+            bottom: 20, // Adjust as needed
+            left: 20, // Position it within Team A's section
+            child: FloatingActionButton(
+              onPressed: () => _decrementScore('A'),
+              backgroundColor: Colors.black12,
+              child: const Icon(Icons.exposure_neg_1, color: Colors.white),
+            ),
+          ),
+          // Minus button for Team B positioned at the bottom of the team section
+          Positioned(
+            bottom: 20, // Adjust as needed
+            right: 20, // Position it within Team B's section
+            child: FloatingActionButton(
+              onPressed: () => _decrementScore('B'),
+              backgroundColor: Colors.black12,
+              child: const Icon(Icons.exposure_neg_1, color: Colors.white),
             ),
           ),
         ],
