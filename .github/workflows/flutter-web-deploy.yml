@@ -32,6 +32,7 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
           branch: gh-pages  # The GitHub Pages branch
-          folder: flutter-app/build/web  # The folder containing the Flutter web build
+          folder: build/web  # The folder containing the Flutter web build
+          clean: true  # Clean the gh-pages branch before deploying
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
