@@ -8,28 +8,35 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        
+      - name: Clone repository
+        uses: actions/checkout@v4
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.7.0'  # Specify the Flutter version you are using
+          channel: stable
 
       - name: Install dependencies
         run: |
+          cd flutter-app  # Change to the Flutter project directory
           flutter pub get
+
+      - name: Run tests
+        run: |
+          cd flutter-app  # Change to the Flutter project directory
+          flutter test
 
       - name: Build Flutter web app
         run: |
+          cd flutter-app  # Change to the Flutter project directory
           flutter build web
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.7.2
         with:
           branch: gh-pages  # The GitHub Pages branch
-          folder: build/web  # The folder containing the Flutter web build
+          folder: flutter-app/build/web  # The folder containing the Flutter web build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
